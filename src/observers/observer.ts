@@ -17,8 +17,8 @@ export class KafkaObserver implements LifeCycleObserver {
   }
 
   async start() {
-    await this.admin.connect();
-    await this.producer.connect();
+    this.admin && await this.admin.connect();
+    this.producer && await this.producer.connect();
 
     const promises: Promise<void>[] = [];
 
@@ -30,8 +30,8 @@ export class KafkaObserver implements LifeCycleObserver {
   }
 
   async stop() {
-    await this.admin.disconnect();
-    await this.producer.disconnect();
+    this.admin && await this.admin.disconnect();
+    this.producer && await this.producer.disconnect();
 
     const promises: Promise<void>[] = [];
 
