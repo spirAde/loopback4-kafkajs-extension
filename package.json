@@ -1,10 +1,12 @@
 {
   "name": "loopback4-kafkajs-extension",
   "version": "1.0.0",
-  "description": "Extension makes it possible to use kafka communication using kafkajs package for loopback4 applications",
+  "description": "Extension makes it possible to use kafka functionality using kafkajs package for loopback4 applications",
   "keywords": [
     "loopback-extension",
-    "loopback"
+    "loopback",
+    "kafkajs",
+    "kafka"
   ],
   "main": "index.js",
   "engines": {
@@ -21,7 +23,7 @@
     "eslint": "lb-eslint --report-unused-disable-directives .",
     "eslint:fix": "npm run eslint -- --fix",
     "pretest": "npm run clean && npm run build",
-    "test": "lb-mocha --allow-console-logs \"dist/__tests__\"",
+    "test": "nyc --reporter=html --reporter=text lb-mocha --allow-console-logs \"dist/__tests__\"",
     "posttest": "npm run lint",
     "test:dev": "lb-mocha --allow-console-logs dist/__tests__/**/*.js && npm run posttest",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache"
@@ -29,7 +31,10 @@
   "repository": {
     "type": "git"
   },
-  "author": "",
+  "author": {
+    "name": "Dmitry Spiridonov",
+    "email": "spirAde@yandex.ru"
+  },
   "license": "",
   "files": [
     "README.md",
@@ -43,20 +48,23 @@
     "@loopback/boot": "^2.1.2",
     "@loopback/context": "^3.6.0",
     "@loopback/core": "^2.4.2",
+    "kafkajs": "^1.12.0",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
     "@loopback/build": "^5.3.0",
-    "source-map-support": "^0.5.19",
-    "@loopback/testlab": "^3.1.2",
-    "@types/node": "^10.17.21",
-    "@typescript-eslint/parser": "^2.30.0",
-    "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@loopback/eslint-config": "^6.0.5",
+    "@loopback/testlab": "^3.1.2",
+    "@types/kafkajs": "^1.9.0",
+    "@types/node": "^10.17.21",
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-eslint-plugin": "^2.2.1",
     "eslint-plugin-mocha": "^6.3.0",
+    "nyc": "^15.0.1",
+    "source-map-support": "^0.5.19",
     "typescript": "~3.8.3"
   }
 }
