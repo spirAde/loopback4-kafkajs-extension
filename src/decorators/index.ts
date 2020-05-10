@@ -1,1 +1,1 @@
-export * from './kafka.decorator';
+export * from './decorator';
