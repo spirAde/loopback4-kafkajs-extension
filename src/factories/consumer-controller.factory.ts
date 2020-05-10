@@ -13,7 +13,7 @@ import {withPrefix, normalizeTopic} from '../utils';
 import {BaseFactory} from './base.factory';
 
 export class ConsumerControllerFactory extends BaseFactory {
-  async create(consumer: EnhancedConsumer, runner: RunnerConfig) {
+  async create(consumer: EnhancedConsumer, runner?: RunnerConfig) {
     this.controller = await this.context.get<{[method: string]: Function}>(
       `controllers.${this.controllerClass.name}`,
     );
@@ -62,7 +62,7 @@ export class ConsumerControllerFactory extends BaseFactory {
       {},
     );
 
-    ConsumerControllerFactory.detectMethodsTopicDuplicateError(schema);
+    this.detectMethodsTopicDuplicateError(schema);
 
     const topics = Object.values(schema).flat();
 
@@ -79,9 +79,9 @@ export class ConsumerControllerFactory extends BaseFactory {
         await this.invokeMethods(
           this.findTopicSubscriptionMethods(
             schema,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore
-            asBatch ? data.batch.topic : data.topic,
+            asBatch
+              ? (data as EachBatchPayload).batch.topic
+              : (data as EachMessagePayload).topic,
           ),
           data,
         );
@@ -89,7 +89,7 @@ export class ConsumerControllerFactory extends BaseFactory {
     });
   }
 
-  private static detectMethodsTopicDuplicateError(
+  private detectMethodsTopicDuplicateError(
     schema: Record<string, NormalizedTopic[]>,
   ) {
     for (const [method, topics] of Object.entries(schema)) {
@@ -101,7 +101,11 @@ export class ConsumerControllerFactory extends BaseFactory {
 
       if (duplicates.length > 0) {
         throw new Error(
-          `${method} has duplicates of topics: ${topics.join(', ')}`,
+          `${
+            this.controllerClass.name
+          }:${method} method has duplicates of topics: ${duplicates.join(
+            ', ',
+          )}`,
         );
       }
     }

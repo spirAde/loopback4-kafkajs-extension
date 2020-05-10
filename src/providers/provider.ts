@@ -92,7 +92,11 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
           ...accumulator,
           consumers: [
             ...(accumulator.consumers ?? []),
-            {config: metadata.config, runner: metadata.runner, controller},
+            {
+              config: metadata.config,
+              runner: metadata.runner,
+              controller,
+            },
           ],
         };
       },
@@ -201,8 +205,6 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
 
       await new ConsumerControllerFactory(context, controller!).create(
         consumer,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
         runner,
       );
     }
