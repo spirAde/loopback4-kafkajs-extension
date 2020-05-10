@@ -92,7 +92,7 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
           ...accumulator,
           consumers: [
             ...(accumulator.consumers ?? []),
-            {config: metadata.config, controller},
+            {config: metadata.config, runner: metadata.runner, controller},
           ],
         };
       },
@@ -172,32 +172,39 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
     context: Context,
     admin: PoolSourceOptions<AdminConfig>,
   ) {
-    await new AdminControllerFactory(context, admin.controller).create(
-      this.admin,
-    );
+    admin.controller &&
+      (await new AdminControllerFactory(context, admin.controller).create(
+        this.admin,
+      ));
   }
 
   private async enhanceProducerController(
     context: Context,
     producer: PoolSourceOptions<ProducerConfig>,
   ) {
-    await new ProducerControllerFactory(context, producer.controller).create(
-      this.producer,
-    );
+    producer.controller &&
+      (await new ProducerControllerFactory(context, producer.controller).create(
+        this.producer,
+      ));
   }
 
   private async enhanceConsumerControllers(
     context: Context,
     consumers: PoolSourceOptions<ConsumerConfig>[],
   ) {
-    for (const {controller, config} of consumers) {
+    for (const {config, controller, runner} of consumers) {
       if (!config) {
-        throw KafkaProvider.consumerConfigNotFoundError(controller);
+        throw KafkaProvider.consumerConfigNotFoundError(controller!);
       }
 
       const consumer = this.consumers.get(config.groupId)!;
 
-      await new ConsumerControllerFactory(context, controller).create(consumer);
+      await new ConsumerControllerFactory(context, controller!).create(
+        consumer,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        runner,
+      );
     }
   }
 

@@ -2,21 +2,23 @@ import {invokeMethod, MetadataInspector} from '@loopback/context';
 import {
   EnhancedConsumer,
   ConsumerEvents,
-  ConsumerSubscribeTopic,
   EachBatchPayload,
   EachMessagePayload,
+  RunnerConfig,
   MetadataMap,
+  Topic,
+  NormalizedTopic,
 } from '../types';
 import {withPrefix, normalizeTopic} from '../utils';
 import {BaseFactory} from './base.factory';
 
 export class ConsumerControllerFactory extends BaseFactory {
-  async create(consumer: EnhancedConsumer) {
+  async create(consumer: EnhancedConsumer, runner: RunnerConfig) {
     this.controller = await this.context.get<{[method: string]: Function}>(
       `controllers.${this.controllerClass.name}`,
     );
 
-    await this.registerSubscribeMethods(consumer);
+    await this.registerSubscribeMethods(consumer, runner);
 
     this.registerEventMethods(consumer, ConsumerEvents.HEARTBEAT);
     this.registerEventMethods(consumer, ConsumerEvents.COMMIT_OFFSETS);
@@ -34,20 +36,12 @@ export class ConsumerControllerFactory extends BaseFactory {
     return this.controller;
   }
 
-  protected multipleSubscriptionMethodsError(
-    methods: MetadataMap<ConsumerSubscribeTopic>,
+  private async registerSubscribeMethods(
+    consumer: EnhancedConsumer,
+    runner: RunnerConfig = {},
   ) {
-    const methodNames = Object.keys(methods).join(', ');
-
-    return new Error(
-      `${methodNames} cannot be applied more than once on ${this.controllerClass.name}.
-      Each controller must consume only one runner and consumer group and any topics count`,
-    );
-  }
-
-  private async registerSubscribeMethods(consumer: EnhancedConsumer) {
-    const subscribeMethods =
-      MetadataInspector.getAllMethodMetadata<ConsumerSubscribeTopic>(
+    const subscribeMethods: MetadataMap<Topic[]> =
+      MetadataInspector.getAllMethodMetadata<Topic[]>(
         withPrefix(ConsumerEvents.SUBSCRIBE),
         this.controllerClass.prototype,
       ) ?? {};
@@ -58,12 +52,19 @@ export class ConsumerControllerFactory extends BaseFactory {
       return;
     }
 
-    if (methodNames.length > 1) {
-      throw this.multipleSubscriptionMethodsError(subscribeMethods);
-    }
+    const schema = Object.keys(subscribeMethods).reduce(
+      (accumulator, method) => {
+        return {
+          ...accumulator,
+          [method]: subscribeMethods[method].map(normalizeTopic),
+        };
+      },
+      {},
+    );
 
-    const [method, metadata] = Object.entries(subscribeMethods)[0];
-    const {runner = {}, topics = []} = metadata;
+    ConsumerControllerFactory.detectMethodsTopicDuplicateError(schema);
+
+    const topics = Object.values(schema).flat();
 
     for await (const topic of topics) {
       await consumer.subscribe(normalizeTopic(topic));
@@ -75,8 +76,56 @@ export class ConsumerControllerFactory extends BaseFactory {
     await consumer.run({
       ...config,
       [runnerFn]: async (data: EachBatchPayload | EachMessagePayload) => {
-        await invokeMethod(this.controller, method, this.context, [data]);
+        await this.invokeMethods(
+          this.findTopicSubscriptionMethods(
+            schema,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            asBatch ? data.batch.topic : data.topic,
+          ),
+          data,
+        );
       },
     });
+  }
+
+  private static detectMethodsTopicDuplicateError(
+    schema: Record<string, NormalizedTopic[]>,
+  ) {
+    for (const [method, topics] of Object.entries(schema)) {
+      const duplicates = topics
+        .map(({topic}) => topic)
+        .filter((topic, index, original) => {
+          return index !== original.indexOf(topic);
+        });
+
+      if (duplicates.length > 0) {
+        throw new Error(
+          `${method} has duplicates of topics: ${topics.join(', ')}`,
+        );
+      }
+    }
+  }
+
+  private findTopicSubscriptionMethods(
+    schema: Record<string, NormalizedTopic[]>,
+    topicName: string,
+  ): string[] {
+    return Object.keys(schema).filter(method => {
+      return schema[method].some(({topic}) =>
+        topic instanceof RegExp ? topic.test(topicName) : topic === topicName,
+      );
+    });
+  }
+
+  private async invokeMethods(
+    methods: string[],
+    data: EachBatchPayload | EachMessagePayload,
+  ) {
+    await Promise.all(
+      methods.map(method =>
+        invokeMethod(this.controller, method, this.context, [data]),
+      ),
+    );
   }
 }

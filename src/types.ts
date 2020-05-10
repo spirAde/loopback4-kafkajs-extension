@@ -141,11 +141,6 @@ export type TopicName = string | RegExp;
 export type NormalizedTopic = KafkaConsumerSubscribeTopic;
 export type Topic = TopicName | NormalizedTopic;
 
-export interface ConsumerSubscribeTopic {
-  runner?: RunnerConfig;
-  topics: Topic[];
-}
-
 export type Enhancer<E> = {
   isConnected: boolean;
   listeners: Map<E, () => void>;
@@ -171,6 +166,7 @@ export interface KafkaProducerControllerMetadata {
 export interface KafkaConsumerControllerMetadata {
   entity: 'consumer';
   config: KafkaConsumerConfig;
+  runner?: RunnerConfig;
 }
 
 export interface KafkaAdminControllerMetadata {
@@ -184,7 +180,8 @@ export type KafkaControllerMetadata =
 
 export interface PoolSourceOptions<T> {
   config?: T;
-  controller: ControllerClass;
+  controller?: ControllerClass;
+  runner?: RunnerConfig;
 }
 
 export interface PoolControllers {

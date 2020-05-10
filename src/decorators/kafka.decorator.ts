@@ -7,9 +7,9 @@ import {MetadataInspector, ClassDecoratorFactory} from '@loopback/metadata';
 import {
   EntityName,
   ConsumerEvents,
-  ConsumerSubscribeTopic,
   CommonEvents,
   KafkaControllerMetadata,
+  Topic,
 } from '../types';
 import {withPrefix} from '../utils';
 import {ControllerClass} from '@loopback/core';
@@ -142,10 +142,10 @@ export namespace kafka {
     );
   }
 
-  export function subscribe(metadata: ConsumerSubscribeTopic) {
+  export function subscribe(...topics: Topic[]) {
     return MethodDecoratorFactory.createDecorator(
       withPrefix(ConsumerEvents.SUBSCRIBE),
-      metadata,
+      topics,
     );
   }
 }
