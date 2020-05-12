@@ -230,3 +230,6 @@ const jsonSerializer = await this.serializerService.getSerializer('json');
 
 Run `npm test` from the root folder.
 
+## Thankfulness
+
+Thanks KafkaJS team(https://github.com/tulios/kafkajs/graphs/contributors) for providing best package for communication with Kafka.
