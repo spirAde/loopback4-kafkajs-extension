@@ -9,11 +9,11 @@ import {
 import {Provider} from '@loopback/context';
 import {
   Kafka,
-  EnhancedAdmin,
-  EnhancedConsumer,
-  EnhancedProducer,
+  Admin,
+  Consumer,
+  Producer,
   KafkaConfig,
-  KafkaProviderPayload,
+  KafkaService,
   PoolSourceOptions,
   AdminConfig,
   ConsumerConfig,
@@ -31,11 +31,11 @@ import {KafkaBindings, KafkaTags} from '../keys';
 import {createAdmin, createConsumer, createProducer} from '../enhancer';
 import {withPrefix} from '../utils';
 
-export class KafkaProvider implements Provider<KafkaProviderPayload> {
+export class KafkaProvider implements Provider<KafkaService> {
   client: Kafka;
-  admin: EnhancedAdmin;
-  producer: EnhancedProducer;
-  consumers: Map<string, EnhancedConsumer>;
+  admin: Admin;
+  producer: Producer;
+  consumers: Map<string, Consumer>;
 
   constructor(
     @inject(CoreBindings.APPLICATION_INSTANCE)
@@ -55,7 +55,7 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
     this.configureConsumers(application, pool.consumers);
   }
 
-  public value() {
+  public value(): KafkaService {
     return {
       client: this.client,
       admin: this.admin,
@@ -118,8 +118,8 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
     this.admin = createAdmin(this.client, adminConfig);
     this.bindAdmin(context);
 
-    if (admin) {
-      this.enhanceAdminController(context, admin).catch(error =>
+    if (admin?.controller) {
+      this.enhanceAdminController(context, admin.controller).catch(error =>
         console.log(error),
       );
     }
@@ -133,10 +133,11 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
     this.producer = createProducer(this.client, producerConfig);
     this.bindProducer(context);
 
-    if (producer) {
-      this.enhanceProducerController(context, producer).catch(error =>
-        console.log(error),
-      );
+    if (producer?.controller) {
+      this.enhanceProducerController(
+        context,
+        producer.controller,
+      ).catch(error => console.log(error));
     }
   }
 
@@ -174,22 +175,18 @@ export class KafkaProvider implements Provider<KafkaProviderPayload> {
 
   private async enhanceAdminController(
     context: Context,
-    admin: PoolSourceOptions<AdminConfig>,
+    controller: ControllerClass,
   ) {
-    admin.controller &&
-      (await new AdminControllerFactory(context, admin.controller).create(
-        this.admin,
-      ));
+    await new AdminControllerFactory(context, controller).create(this.admin);
   }
 
   private async enhanceProducerController(
     context: Context,
-    producer: PoolSourceOptions<ProducerConfig>,
+    controller: ControllerClass,
   ) {
-    producer.controller &&
-      (await new ProducerControllerFactory(context, producer.controller).create(
-        this.producer,
-      ));
+    await new ProducerControllerFactory(context, controller).create(
+      this.producer,
+    );
   }
 
   private async enhanceConsumerControllers(

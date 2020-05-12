@@ -7,6 +7,8 @@ import {
 } from '@loopback/core';
 import {inject} from '@loopback/context';
 import {KafkaProvider} from './providers';
+import {KafkaSerializerService} from './services';
+import {BufferSerializer, JsonSerializer} from './serializers';
 import {KafkaObserver} from './observers';
 import {KafkaBindings} from './keys';
 
@@ -21,6 +23,15 @@ export class KafkaComponent implements Component {
         key: KafkaBindings.KAFKA_SERVICE.toString(),
       }).inScope(BindingScope.SINGLETON),
     );
+
+    application.add(
+      createBindingFromClass(KafkaSerializerService, {
+        key: KafkaBindings.KAFKA_SERIALIZER_SERVICE.toString(),
+      }).inScope(BindingScope.SINGLETON),
+    );
+
+    application.add(createBindingFromClass(BufferSerializer));
+    application.add(createBindingFromClass(JsonSerializer));
 
     application.lifeCycleObserver(KafkaObserver);
   }

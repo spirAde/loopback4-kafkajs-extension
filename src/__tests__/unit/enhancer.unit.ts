@@ -1,9 +1,9 @@
 import {expect, sinon} from '@loopback/testlab';
 import {
   CompressionTypes,
-  EnhancedAdmin,
-  EnhancedConsumer,
-  EnhancedProducer,
+  Admin,
+  Consumer,
+  Producer,
   Kafka,
   ProducerBatch,
   ProducerConfig,
@@ -213,7 +213,7 @@ describe('Enhancer', () => {
 
   function testEnhancedEntityProperties(
     testName: string,
-    entity: EnhancedConsumer | EnhancedProducer | EnhancedAdmin,
+    entity: Consumer | Producer | Admin,
   ) {
     const properties = [
       'isConnected',

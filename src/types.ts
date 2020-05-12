@@ -25,7 +25,7 @@ import {
 } from 'kafkajs';
 export * from 'kafkajs';
 
-export type Entity = Consumer | Producer | Admin;
+export type Entity = OriginalConsumer | OriginalProducer | OriginalAdmin;
 export type EnhancedEntity = Entity & Enhancer<EventName>;
 export type EntityName = 'producer' | 'consumer' | 'admin';
 
@@ -122,7 +122,7 @@ export enum CompressionTypes {
 }
 
 export interface KafkaConfig extends KafkaClientConfig {
-  codecs?: Partial<Record<CompressionTypes, unknown>>
+  codecs?: Partial<Record<CompressionTypes, unknown>>;
 }
 export interface ConsumerConfig extends KafkaConsumerConfig {}
 export interface AdminConfig extends KafkaAdminConfig {}
@@ -148,12 +148,16 @@ export type Enhancer<E> = {
   removeListener(eventName: E): void;
 };
 
-export type Consumer = KafkaConsumer;
-export type EnhancedConsumer = Consumer & Enhancer<ConsumerEventName>;
-export type Producer = KafkaProducer;
-export type EnhancedProducer = Producer & Enhancer<ProducerEventName>;
-export type Admin = KafkaAdmin;
-export type EnhancedAdmin = Admin & Enhancer<AdminEventName>;
+export type OriginalConsumer = KafkaConsumer;
+export type Consumer = OriginalConsumer & Enhancer<ConsumerEventName>;
+
+export type OriginalProducer = KafkaProducer;
+export type Producer = OriginalProducer & Enhancer<ProducerEventName>;
+
+export type OriginalAdmin = KafkaAdmin;
+export type Admin = OriginalAdmin & {
+  listTopics(): Promise<string[]>;
+} & Enhancer<AdminEventName>;
 
 export interface MetadataMap<T> {
   [methodName: string]: T;
@@ -190,9 +194,15 @@ export interface PoolControllers {
   consumers?: PoolSourceOptions<KafkaConsumerConfig>[];
 }
 
-export interface KafkaProviderPayload {
+export interface KafkaService {
   client: Kafka;
   admin: Admin;
   producer: Producer;
   consumers: Map<string, Consumer>;
+}
+
+export interface Serializer {
+  type: string;
+  encode(data: unknown): Buffer;
+  decode(data: Buffer): unknown;
 }

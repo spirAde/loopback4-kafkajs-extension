@@ -1,4 +1,6 @@
-import {BindingKey} from '@loopback/context';
+import {BindingKey, BindingTemplate} from '@loopback/context';
+import {extensionFor} from '@loopback/core';
+import {KafkaSerializerService} from './services';
 import {
   KafkaConfig,
   ProducerConfig,
@@ -27,6 +29,17 @@ export namespace KafkaBindings {
     consumer: Consumer;
     admin: Admin;
   }>(withPrefix('service'));
+
+  export const KAFKA_SERIALIZER_SERVICE = BindingKey.create<KafkaSerializerService>(
+    withPrefix('service-serializer')
+  );
+
+  export const KAFKA_SERIALIZER_EXTENSION_POINT_NAME = withPrefix('serializers');
+
+  export const asSerializer: BindingTemplate = binding => {
+    extensionFor(KAFKA_SERIALIZER_EXTENSION_POINT_NAME)(binding);
+    binding.tag({namespace: withPrefix('serializers')});
+  };
 }
 
 export namespace KafkaTags {

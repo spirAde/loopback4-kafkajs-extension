@@ -1,8 +1,8 @@
-import {EnhancedAdmin, AdminEvents} from '../types';
+import {Admin, AdminEvents} from '../types';
 import {BaseFactory} from './base.factory';
 
 export class AdminControllerFactory extends BaseFactory {
-  async create(admin: EnhancedAdmin) {
+  async create(admin: Admin) {
     this.controller = await this.context.get<{[method: string]: Function}>(
       `controllers.${this.controllerClass.name}`,
     );

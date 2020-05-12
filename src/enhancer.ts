@@ -7,11 +7,11 @@ import {
   AdminConfig,
   Kafka,
   Consumer,
-  EnhancedConsumer,
+  OriginalConsumer,
   Producer,
-  EnhancedProducer,
+  OriginalProducer,
   Admin,
-  EnhancedAdmin,
+  OriginalAdmin,
 } from './types';
 
 function proxyInvokeListener(
@@ -30,9 +30,9 @@ function proxyInvokeListener(
   return new Proxy(listener, handler);
 }
 
-export function enhancer(entity: Consumer): EnhancedConsumer;
-export function enhancer(entity: Producer): EnhancedProducer;
-export function enhancer(entity: Admin): EnhancedAdmin;
+export function enhancer(entity: OriginalConsumer): Consumer;
+export function enhancer(entity: OriginalProducer): Producer;
+export function enhancer(entity: OriginalAdmin): Admin;
 export function enhancer(entity: Entity): EnhancedEntity {
   return {
     ...entity,
@@ -78,9 +78,9 @@ export function enhancer(entity: Entity): EnhancedEntity {
 }
 
 export function senderEnhancer(
-  producer: EnhancedProducer,
+  producer: Producer,
   config: ProducerConfig,
-): EnhancedProducer {
+): Producer {
   return {
     ...producer,
     send(record) {

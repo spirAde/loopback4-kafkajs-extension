@@ -1,6 +1,6 @@
 import {invokeMethod, MetadataInspector} from '@loopback/context';
 import {
-  EnhancedConsumer,
+  Consumer,
   ConsumerEvents,
   EachBatchPayload,
   EachMessagePayload,
@@ -13,7 +13,7 @@ import {withPrefix, normalizeTopic} from '../utils';
 import {BaseFactory} from './base.factory';
 
 export class ConsumerControllerFactory extends BaseFactory {
-  async create(consumer: EnhancedConsumer, runner?: RunnerConfig) {
+  async create(consumer: Consumer, runner?: RunnerConfig) {
     this.controller = await this.context.get<{[method: string]: Function}>(
       `controllers.${this.controllerClass.name}`,
     );
@@ -37,7 +37,7 @@ export class ConsumerControllerFactory extends BaseFactory {
   }
 
   private async registerSubscribeMethods(
-    consumer: EnhancedConsumer,
+    consumer: Consumer,
     runner: RunnerConfig = {},
   ) {
     const subscribeMethods: MetadataMap<Topic[]> =
