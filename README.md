@@ -3,7 +3,7 @@
 ## The documentation is still updated.
 
 This module contains a component adding a KafkaJS to LoopBack
-applications. Thanks to the excellent architecture the loopback, you can
+applications. Thanks to the excellent loopback architecture, you can
 use Kafka anywhere in your application.
 This extension provides you with a consumer, producer, admin,
 serializers. The basic concepts are described below:
@@ -189,3 +189,44 @@ The extension will gather all consumers controllers by tag and initialize consum
 <b>Important notice</b>: Each controller must have only one groupId and one runner.
 
 List of consumer options(https://kafka.js.org/docs/consuming#a-name-options-a-options)
+
+The runner can be used in eachMessage and eachBatch modes:
+- eachMessage - consumes one message at a time
+```ts
+@kafka.subscribe('card-ban')
+async handleCardBanMessage(payload: EachMessagePayload): Promise<void> {
+  const jsonSerializer = await this.serializerService.getSerializer('json');
+
+  console.log(
+    'CardOperationConsumerController handleCardBanMessage payload',
+    jsonSerializer.decodeMessagePayload(payload),
+  );
+}
+```
+- eachBatch - consumes batch messages
+```ts
+@kafka.subscribe('deposit')
+handleDepositMessage({ batch, resolveOffset, heartbeat, isRunning, isStale }: EachBatchPayload) {
+  console.log(batch);
+}
+```
+
+## Serializers
+By default two serializers are available:
+- JSON
+- Buffer
+
+### Serializers use
+```ts
+@inject(KafkaBindings.KAFKA_SERIALIZER_SERVICE)
+private serializerService: KafkaSerializerService,
+
+...
+
+const jsonSerializer = await this.serializerService.getSerializer('json');
+```
+
+## Tests(In progress)
+
+Run `npm test` from the root folder.
+
