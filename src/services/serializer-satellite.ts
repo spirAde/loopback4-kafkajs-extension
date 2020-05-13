@@ -25,7 +25,7 @@ export class SerializerSatellite {
   decodeMessage(message: KafkaMessage) {
     return {
       ...message,
-      key: message.key && this.decode(message.key),
+      key: message.key ? this.decode(message.key) : null,
       value: this.decode(message.value),
     };
   }
@@ -51,7 +51,10 @@ export class SerializerSatellite {
   encodeProducerBatch(batch: ProducerBatch) {
     return {
       ...batch,
-      topicMessages: batch?.topicMessages?.map(this.encodeProducerRecord) ?? [],
+      topicMessages:
+        batch?.topicMessages?.map(record =>
+          this.encodeProducerRecord(record),
+        ) ?? [],
     };
   }
 
@@ -60,7 +63,9 @@ export class SerializerSatellite {
       ...payload,
       batch: {
         ...payload.batch,
-        messages: payload.batch.messages.map(this.decodeMessage),
+        messages: payload.batch.messages.map(message =>
+          this.decodeMessage(message),
+        ),
       },
     };
   }
