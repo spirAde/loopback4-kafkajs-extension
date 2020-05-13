@@ -1,7 +1,6 @@
 import {expect} from '@loopback/testlab';
 import {SerializerSatellite} from '../../../services/serializer-satellite';
 import {JsonStrictSerializer} from '../../fixtures/serializers/json-strict.serializer';
-import {KafkaMessage} from 'kafkajs';
 
 describe('SerializerSatellite', () => {
   const serializer = new JsonStrictSerializer();
