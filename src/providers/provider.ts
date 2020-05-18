@@ -1,5 +1,6 @@
 import {
   inject,
+  config,
   Context,
   ControllerClass,
   CoreBindings,
@@ -40,11 +41,11 @@ export class KafkaProvider implements Provider<KafkaService> {
   constructor(
     @inject(CoreBindings.APPLICATION_INSTANCE)
     application: Application,
-    @inject(KafkaBindings.KAFKA_CLIENT_CONFIG)
+    @config({fromBinding: KafkaBindings.KAFKA_CLIENT_CONFIG})
     kafkaConfig: KafkaConfig,
-    @inject(KafkaBindings.KAFKA_PRODUCER_CONFIG)
+    @config({fromBinding: KafkaBindings.KAFKA_PRODUCER_CONFIG})
     producerConfig: KafkaConfig,
-    @inject(KafkaBindings.KAFKA_ADMIN_CONFIG)
+    @config({fromBinding: KafkaBindings.KAFKA_ADMIN_CONFIG})
     adminConfig: KafkaConfig,
   ) {
     const pool: PoolControllers = this.parseControllers(application) ?? {};
@@ -147,9 +148,9 @@ export class KafkaProvider implements Provider<KafkaService> {
   ) {
     if (consumers && consumers.length > 0) {
       this.consumers = new Map(
-        consumers.map(({config}) => [
-          config!.groupId,
-          createConsumer(this.client, config!),
+        consumers.map(consumer => [
+          consumer.config!.groupId,
+          createConsumer(this.client, consumer.config!),
         ]),
       );
       this.bindConsumers(context);
@@ -193,12 +194,12 @@ export class KafkaProvider implements Provider<KafkaService> {
     context: Context,
     consumers: PoolSourceOptions<ConsumerConfig>[],
   ) {
-    for (const {config, controller, runner} of consumers) {
-      if (!config) {
+    for (const {config: consumerControllerConfig, controller, runner} of consumers) {
+      if (!consumerControllerConfig) {
         throw KafkaProvider.consumerConfigNotFoundError(controller!);
       }
 
-      const consumer = this.consumers.get(config.groupId)!;
+      const consumer = this.consumers.get(consumerControllerConfig.groupId)!;
 
       await new ConsumerControllerFactory(context, controller!).create(
         consumer,
