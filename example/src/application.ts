@@ -49,19 +49,19 @@ export class ExampleApplication extends BootMixin(
       SuspiciousActivityServiceBindings.SUSPICIOUS_ACTIVITY_SERVICE,
     ).toClass(SuspiciousActivityService);
 
-    this.bind(SuspiciousActivityServiceBindings.SUSPICIOUS_ACTIVITY_CONFIG).to({
+    this.configure(SuspiciousActivityServiceBindings.SUSPICIOUS_ACTIVITY_CONFIG).to({
       limit: 10000,
     });
   }
 
   bindKafka() {
-    this.bind(KafkaBindings.KAFKA_CLIENT_CONFIG).to({
+    this.configure(KafkaBindings.KAFKA_CLIENT_CONFIG).to({
       clientId: 'my-app-1',
       brokers: ['localhost:9092', 'localhost:9092'],
       logLevel: logLevel.ERROR,
     });
 
-    this.bind(KafkaBindings.KAFKA_ADMIN_CONFIG).to({});
-    this.bind(KafkaBindings.KAFKA_PRODUCER_CONFIG).to({});
+    this.configure(KafkaBindings.KAFKA_ADMIN_CONFIG).to({});
+    this.configure(KafkaBindings.KAFKA_PRODUCER_CONFIG).to({});
   }
 }

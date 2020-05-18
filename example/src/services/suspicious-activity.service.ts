@@ -1,4 +1,4 @@
-import {inject} from '@loopback/context';
+import {config} from '@loopback/context';
 import {SuspiciousActivityServiceBindings} from '../keys';
 
 export interface SuspiciousActivityServiceInterface {
@@ -12,7 +12,9 @@ type SuspiciousActivityConfig = {
 export class SuspiciousActivityService
   implements SuspiciousActivityServiceInterface {
   constructor(
-    @inject(SuspiciousActivityServiceBindings.SUSPICIOUS_ACTIVITY_CONFIG)
+    @config({
+      fromBinding: SuspiciousActivityServiceBindings.SUSPICIOUS_ACTIVITY_CONFIG,
+    })
     private suspiciousActivityConfig: SuspiciousActivityConfig,
   ) {}
 
